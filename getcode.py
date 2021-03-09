@@ -45,6 +45,8 @@ class CodePageParser(html.parser.HTMLParser):
         if self.isCode:
             print(data)
             self.numOutputTags += 1
+        if self.numOutputTags >= arguments.num_tags:
+            exit()
 
 
 searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(arguments.keywords))
@@ -61,5 +63,3 @@ for webAddress in searchPageParser.webAddresses:
     print(webAddress)
 
     codePageParser.feed(requests.get("https://" + webAddress).text)
-    if codePageParser.numOutputTags > arguments.num_tags:
-        break
