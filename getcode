@@ -1,0 +1,5 @@
+#!/bin/env fish
+
+# cp getcode ~/.local/bin
+
+python3 code_from_keywords.py $argv 2>/dev/null | head -n 15
