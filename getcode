@@ -1,6 +1,0 @@
-#!/bin/env fish
-
-# Copy the Fish script to a location referenced by the PATH environment variable.
-# cp ~/git/code_from_keywords/getcode ~/.local/bin
-
-python3 ~/git/code_from_keywords/getcode.py $argv
