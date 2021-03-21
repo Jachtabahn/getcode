@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# To make this program executable from any process working directory, run:
+# ln -s ~/Software/getcode/getcode.py ~/.local/bin/getcode
+
 import argparse
 import html.parser
 import requests
