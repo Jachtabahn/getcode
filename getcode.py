@@ -39,16 +39,23 @@ class CodePageParser(html.parser.HTMLParser):
     numOutputTags = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'code':
+        if tag in ['code']:
             self.isCode = True
+        if tag == 'td':
+            attrsDict = dict(attrs)
+            classString = attrsDict['class']
+            words = classString.split(' ')
+            if 'blob-code' in words:
+                self.isCode = True
 
     def handle_endtag(self, tag):
-        if tag == 'code':
+        if tag in ['code', 'td'] and self.isCode:
             self.isCode = False
+            print()
 
     def handle_data(self, data):
         if self.isCode:
-            print(data)
+            print(data, end="")
             self.numOutputTags += 1
         if self.numOutputTags >= arguments.num_tags:
             exit()
