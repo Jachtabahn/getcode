@@ -10,7 +10,7 @@ import sys
 
 parser = argparse.ArgumentParser(description='Download some code matching given keywords.')
 
-parser.add_argument('--num-tags', type=int, default=15, help='of at least how many tag nodes the content should be output (default: 15 tag nodes)')
+parser.add_argument('--num-tags', type=int, default=150, help='of at least how many tag nodes the content should be output (default: 15 tag nodes)')
 parser.add_argument('keywords', metavar='N', type=str, nargs='+', help='an integer for the accumulator')
 
 arguments = parser.parse_args()
