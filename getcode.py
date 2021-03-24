@@ -43,10 +43,11 @@ class CodePageParser(html.parser.HTMLParser):
             self.isCode = True
         if tag == 'td':
             attrsDict = dict(attrs)
-            classString = attrsDict['class']
-            words = classString.split(' ')
-            if 'blob-code' in words:
-                self.isCode = True
+            if 'class' in attrsDict:
+                classString = attrsDict['class']
+                words = classString.split(' ')
+                if 'blob-code' in words:
+                    self.isCode = True
 
     def handle_endtag(self, tag):
         if tag in ['code', 'td'] and self.isCode:
