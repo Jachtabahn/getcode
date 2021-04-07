@@ -73,6 +73,8 @@ codePageParser = CodePageParser()
 for webAddress in searchPageParser.webAddresses:
 
     print("==================================================")
-    print(webAddress)
 
-    codePageParser.feed(requests.get("https://" + webAddress).text)
+    webAddressWithProtocol = "http://" + webAddress
+    print(webAddressWithProtocol)
+
+    codePageParser.feed(requests.get(webAddressWithProtocol).text)
