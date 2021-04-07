@@ -64,7 +64,7 @@ class CodePageParser(html.parser.HTMLParser):
 
 searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(arguments.keywords))
 searchPageParser = SearchPageParser()
-searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'code_from_keywords/0.0.1'}).text)
+searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'getcode/0.0.1'}).text)
 
 print("--------------------------------------------------")
 print(searchAddress)
