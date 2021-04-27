@@ -5,76 +5,85 @@
 
 import argparse
 import html.parser
+import threading, queue
 import requests
 import sys
 
 parser = argparse.ArgumentParser(description='Download some code matching given keywords.')
 
-parser.add_argument('--num-tags', type=int, default=150, help='of at least how many tag nodes the content should be output (default: 15 tag nodes)')
+parser.add_argument('--num-lines', type=int, default=30, help='of at least how many lines of the tag node content should be output')
 parser.add_argument('keywords', metavar='N', type=str, nargs='+', help='an integer for the accumulator')
 
 arguments = parser.parse_args()
 
-class SearchPageParser(html.parser.HTMLParser):
+codeQueue = queue.Queue()
+
+def getcode(keywords):
+
+  class SearchPageParser(html.parser.HTMLParser):
 
     isResult = False
     webAddresses = []
 
     def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-            if ('class', 'result__url') in attrs:
-                self.isResult = True
+      if tag == 'a':
+        if ('class', 'result__url') in attrs:
+          self.isResult = True
 
     def handle_endtag(self, tag):
-        if tag == 'a':
-            self.isResult = False
+      if tag == 'a':
+        self.isResult = False
 
     def handle_data(self, data):
-        if self.isResult:
-            self.webAddresses.append(data.strip())
+      if self.isResult:
+        self.webAddresses.append(data.strip())
 
-class CodePageParser(html.parser.HTMLParser):
+  class CodePageParser(html.parser.HTMLParser):
 
     isCode = False
-    numOutputTags = 0
 
     def handle_starttag(self, tag, attrs):
-        if tag in ['code']:
+      if tag in ['code']:
+        self.isCode = True
+      if tag == 'td':
+        attrsDict = dict(attrs)
+        if 'class' in attrsDict:
+          classString = attrsDict['class']
+          words = classString.split(' ')
+          if 'blob-code' in words:
             self.isCode = True
-        if tag == 'td':
-            attrsDict = dict(attrs)
-            if 'class' in attrsDict:
-                classString = attrsDict['class']
-                words = classString.split(' ')
-                if 'blob-code' in words:
-                    self.isCode = True
 
     def handle_endtag(self, tag):
-        if tag in ['code', 'td'] and self.isCode:
-            self.isCode = False
-            print()
+      if tag in ['code', 'td'] and self.isCode:
+        self.isCode = False
+        codeQueue.put("\n")
 
     def handle_data(self, data):
-        if self.isCode:
-            print(data, end="")
-            self.numOutputTags += 1
-        if self.numOutputTags >= arguments.num_tags:
-            exit()
+      if self.isCode:
+        data_lines = data.split("\n")
+        for data_line in data_lines:
+          codeQueue.put(data_line)
 
+  searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(keywords))
+  searchPageParser = SearchPageParser()
+  searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'getcode/0.0.1'}).text)
 
-searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(arguments.keywords))
-searchPageParser = SearchPageParser()
-searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'getcode/0.0.1'}).text)
+  codeQueue.put("--------------------------------------------------\n")
+  codeQueue.put(searchAddress + "\n")
 
-print("--------------------------------------------------")
-print(searchAddress)
+  codePageParser = CodePageParser()
+  for webAddress in searchPageParser.webAddresses:
 
-codePageParser = CodePageParser()
-for webAddress in searchPageParser.webAddresses:
-
-    print("==================================================")
+    codeQueue.put("==================================================\n")
 
     webAddressWithProtocol = "http://" + webAddress
-    print(webAddressWithProtocol)
+    codeQueue.put(webAddressWithProtocol + "\n")
 
     codePageParser.feed(requests.get(webAddressWithProtocol).text)
+
+fetchingThread = threading.Thread(target=getcode, args=(arguments.keywords,))
+fetchingThread.start()
+
+for item in range(arguments.num_lines):
+  text = codeQueue.get()
+  print(text, end="")
