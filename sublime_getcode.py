@@ -7,6 +7,10 @@ import sublime_plugin
 import sys
 import threading
 
+# To install the dependencies.json into the Sublime Text software, do the following:
+# Type Ctrl+Shift+P
+# Type Package Control: Satisfy Dependencies
+
 def getcode(codeQueue, keywords):
 
   class SearchPageParser(html.parser.HTMLParser):
