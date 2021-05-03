@@ -5,9 +5,9 @@
 
 import argparse
 import html.parser
-import threading, queue
 import requests
 import sys
+import threading, queue
 
 if __name__ == '__main__':
 
