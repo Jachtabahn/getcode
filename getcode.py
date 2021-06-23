@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description='Download some code matching given keywords.')
 
-  parser.add_argument('--num-lines', type=int, default=30, help='of at least how many lines of the tag node content should be output')
+  parser.add_argument('--num-lines', '-n', type=int, default=30, help='of at least how many lines of the tag node content should be output')
   parser.add_argument('keywords', metavar='N', type=str, nargs='+', help='an integer for the accumulator')
 
   arguments = parser.parse_args()
