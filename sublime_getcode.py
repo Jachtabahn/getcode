@@ -7,6 +7,18 @@ import sublime_plugin
 import sys
 import threading
 
+# Put
+# { "keys": ["ctrl+shift+g"], "command": "getcode" },
+# into the file, that opens when you go to Preferences -> Key Bindings, which is at
+# `~.config/sublime-text-3/Packages/User/Default (Linux).sublime-keymap`.
+
+# Put
+# [
+#   { "caption": "Get code", "command": "getcode" },
+# ]
+# into a file called `getcode.sublime-commands`
+# inside the same folder as this file.
+
 # To install the dependencies.json into the Sublime Text software, do the following:
 # Type Ctrl+Shift+P
 # Type Package Control: Satisfy Dependencies
