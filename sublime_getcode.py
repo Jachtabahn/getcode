@@ -42,7 +42,7 @@ class GetcodeCommand(sublime_plugin.TextCommand):
     code_path = tempdir_path + '/' + zusammen
 
     with open(code_path, 'w') as code_file:
-      proc = subprocess.Popen(['getcode'] + keywords, stdout=code_file, stderr=code_file)
+      proc = subprocess.Popen(['getcode', keywords], stdout=code_file, stderr=code_file)
 
     window = sublime.active_window()
     fetching_view = window.open_file(code_path)
