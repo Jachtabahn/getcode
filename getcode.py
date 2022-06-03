@@ -6,93 +6,78 @@
 import argparse
 import html.parser
 import requests
-import sys
-import threading, queue
 
 if __name__ == '__main__':
 
   parser = argparse.ArgumentParser(description='Download some code matching given keywords.')
-
-  parser.add_argument('--num-lines', '-n', type=int, default=1000, help='of at least how many lines of the tag node content should be output')
-  parser.add_argument('keywords', metavar='N', type=str, nargs='+', help='an integer for the accumulator')
-
+  parser.add_argument('code_keywords', metavar='N', type=str, nargs='+', help='an integer for the accumulator')
   arguments = parser.parse_args()
 
-  codeQueue = queue.Queue()
+  class SearchPageParser(html.parser.HTMLParser):
 
-  def getcode(keywords):
+    isResult = False
+    webAddresses = []
 
-    class SearchPageParser(html.parser.HTMLParser):
+    def handle_starttag(self, tag, attrs):
+      if tag == 'a':
+        if ('class', 'result__url') in attrs:
+          self.isResult = True
 
-      isResult = False
-      webAddresses = []
+    def handle_endtag(self, tag):
+      if tag == 'a':
+        self.isResult = False
 
-      def handle_starttag(self, tag, attrs):
-        if tag == 'a':
-          if ('class', 'result__url') in attrs:
-            self.isResult = True
+    def handle_data(self, data):
+      if self.isResult:
+        self.webAddresses.append(data.strip())
 
-      def handle_endtag(self, tag):
-        if tag == 'a':
-          self.isResult = False
+  class CodePageParser(html.parser.HTMLParser):
 
-      def handle_data(self, data):
-        if self.isResult:
-          self.webAddresses.append(data.strip())
+    isCode = False
 
-    class CodePageParser(html.parser.HTMLParser):
+    def handle_starttag(self, tag, attrs):
+      if tag in ['code']:
+        self.isCode = True
+      if tag == 'td':
+        attrsDict = dict(attrs)
+        if 'class' in attrsDict:
+          classString = attrsDict['class']
+          words = classString.split(' ')
+          if 'blob-code' in words:
+            self.isCode = True
+      if tag == 'br' and self.isCode:
+        print("", flush=True)
 
-      isCode = False
+    def handle_endtag(self, tag):
+      if tag in ['code', 'td'] and self.isCode:
+        self.isCode = False
+        print("", flush=True)
 
-      def handle_starttag(self, tag, attrs):
-        if tag in ['code']:
-          self.isCode = True
-        if tag == 'td':
-          attrsDict = dict(attrs)
-          if 'class' in attrsDict:
-            classString = attrsDict['class']
-            words = classString.split(' ')
-            if 'blob-code' in words:
-              self.isCode = True
-        if tag == 'br' and self.isCode:
-          codeQueue.put("")
+    def handle_data(self, data):
+      if self.isCode:
+        data_lines = data.split("\n")
+        for data_line in data_lines:
+          print(data_line, flush=True)
 
-      def handle_endtag(self, tag):
-        if tag in ['code', 'td'] and self.isCode:
-          self.isCode = False
-          codeQueue.put("")
+  searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(arguments.code_keywords))
+  searchPageParser = SearchPageParser()
+  searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'getcode/0.0.1'}).text)
 
-      def handle_data(self, data):
-        if self.isCode:
-          data_lines = data.split("\n")
-          for data_line in data_lines:
-            codeQueue.put(data_line)
+  print(f'Code for: {" ".join(arguments.code_keywords)}', flush=True)
+  print("--------------------------------------------------", flush=True)
+  print(searchAddress, flush=True)
 
-    searchAddress = 'https://html.duckduckgo.com/html?q={}'.format("+".join(keywords))
-    searchPageParser = SearchPageParser()
-    searchPageParser.feed(requests.get(searchAddress, headers={'user-agent': 'getcode/0.0.1'}).text)
+  codePageParser = CodePageParser()
+  for webAddress in searchPageParser.webAddresses:
 
-    codeQueue.put("--------------------------------------------------")
-    codeQueue.put(searchAddress)
+    print("==================================================", flush=True)
 
-    codePageParser = CodePageParser()
-    for webAddress in searchPageParser.webAddresses:
+    webAddressWithProtocol = "http://" + webAddress
+    print(webAddressWithProtocol, flush=True)
 
-      codeQueue.put("==================================================")
-
-      webAddressWithProtocol = "http://" + webAddress
-      codeQueue.put(webAddressWithProtocol)
-
-      try:
-        codePageParser.feed(requests.get(webAddressWithProtocol).text)
-      except requests.exceptions.ConnectionError as exception:
-        print("==================================================", file=sys.stderr, flush=True)
-        print("GETCODE ERROR requests.exceptions.ConnectionError: " + str(exception), file=sys.stderr, flush=True)
-        print("==================================================", file=sys.stderr, flush=True)
-
-  fetchingThread = threading.Thread(name="Page-Parser", target=getcode, args=(arguments.keywords,))
-  fetchingThread.start()
-
-  for item in range(arguments.num_lines):
-    text = codeQueue.get()
-    print(text, flush=True)
+    try:
+      codePageParser.feed(requests.get(webAddressWithProtocol).text)
+    except requests.exceptions.ConnectionError as exception:
+      print("==================================================", flush=True)
+      print("GETCODE ERROR requests.exceptions.ConnectionError: " + str(exception), flush=True)
+      print("==================================================", flush=True)
