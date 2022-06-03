@@ -86,13 +86,13 @@ if __name__ == '__main__':
       try:
         codePageParser.feed(requests.get(webAddressWithProtocol).text)
       except requests.exceptions.ConnectionError as exception:
-        print("==================================================", file=sys.stderr)
-        print("GETCODE ERROR requests.exceptions.ConnectionError: " + str(exception), file=sys.stderr)
-        print("==================================================", file=sys.stderr)
+        print("==================================================", file=sys.stderr, flush=True)
+        print("GETCODE ERROR requests.exceptions.ConnectionError: " + str(exception), file=sys.stderr, flush=True)
+        print("==================================================", file=sys.stderr, flush=True)
 
   fetchingThread = threading.Thread(name="Page-Parser", target=getcode, args=(arguments.keywords,))
   fetchingThread.start()
 
   for item in range(arguments.num_lines):
     text = codeQueue.get()
-    print(text)
+    print(text, flush=True)
