@@ -1,6 +1,7 @@
 # Just run the getcode.py script, putting the results into a separate file, and open that file with Sublime Text
 # for easy viewing of valuable code from the Internet.
 
+import os
 import sublime
 import sublime_plugin
 import subprocess
@@ -34,17 +35,15 @@ class GetcodeCommand(sublime_plugin.TextCommand):
 
   def run(self, edit, keywords):
 
-    # Erstelle selbst einen Dateinamen, welcher den Befehlstext enthält.
-    # `keywords` is of type <class 'str'>
-    tempdir_path = tempfile.gettempdir()
-    zusammen = keywords.replace(' ', '_')
+    code_keywords_filepath = os.path.join(tempfile.gettempdir(), 'getcode.keywords')
 
-    code_path = tempdir_path + '/' + zusammen
-
-    with open(code_path, 'w') as code_file:
-      proc = subprocess.Popen(['getcode', keywords], stdout=code_file, stderr=code_file)
+    with open(code_keywords_filepath, 'w') as code_file:
+      code_keywords = keywords.split()
+      proc = subprocess.Popen(
+        ['getcode'] + code_keywords,
+        stdout=code_file,
+        stderr=code_file
+      )
 
     window = sublime.active_window()
-    fetching_view = window.open_file(code_path)
-    # Set title of fetching_view with `keywords`
-    window.focus_view(fetching_view)
+    fetching_view = window.open_file(code_keywords_filepath)
